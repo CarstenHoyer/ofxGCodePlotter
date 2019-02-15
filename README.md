@@ -15,6 +15,7 @@ ofxGCodePlotter will _never_ be a GCode library. I personally only use it for co
 * Print to the console: ``gcode.print(paths);
 
 ## Limitations / Roadmap
+* Shortest path
 * Print filled paths (hatching).
 * Cut paths under a filled path.
 * Do not print off canvas content.
