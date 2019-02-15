@@ -12,10 +12,10 @@
 #include "GCodePath.h"
 #include "ofxCubicBezierToBiarc.h"
 
-class GCode {
+class ofxGCodePlotter {
 public:
-    GCode();
-    GCode(string configPath, float width, float height);
+    ofxGCodePlotter();
+    ofxGCodePlotter(string configPath, float width, float height);
     float inWidth;
     float inHeight;
     ofPoint offset;

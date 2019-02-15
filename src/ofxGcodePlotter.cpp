@@ -9,12 +9,12 @@
 #include "ofxCubicBezierToBiarc.h"
 #include "GCodePath.h"
 
-GCode::GCode()
+ofxGCodePlotter::ofxGCodePlotter()
 {
     // Empty.
 }
 
-GCode::GCode(string configPath, float width, float height)
+ofxGCodePlotter::ofxGCodePlotter(string configPath, float width, float height)
 {
     config = Config(configPath);
     ofxCubicBezierToBiarc bezierToBiarc = ofxCubicBezierToBiarc();
@@ -35,7 +35,7 @@ GCode::GCode(string configPath, float width, float height)
     offset = ofPoint(xOffset, yOffset);
 }
 
-vector<GCodePath> GCode::generate(vector<ofPath> paths) {
+vector<GCodePath> ofxGCodePlotter::generate(vector<ofPath> paths) {
     vector<GCodePath> gps = addStart();
     for (auto iter = paths.begin(); iter != paths.end(); ++iter) {
         vector<GCodePath> cmdPaths = pathToCommand((*iter));
@@ -46,7 +46,7 @@ vector<GCodePath> GCode::generate(vector<ofPath> paths) {
     return gps;
 }
 
-vector<GCodePath> GCode::addStart()
+vector<GCodePath> ofxGCodePlotter::addStart()
 {
     vector<GCodePath> gps;
     GCodePath unit;
@@ -64,7 +64,7 @@ vector<GCodePath> GCode::addStart()
     return gps;
 }
 
-vector<GCodePath> GCode::addEnd()
+vector<GCodePath> ofxGCodePlotter::addEnd()
 {
     vector<GCodePath> gps = home();
     GCodePath end;
@@ -73,7 +73,7 @@ vector<GCodePath> GCode::addEnd()
     return gps;
 }
 
-vector<GCodePath> GCode::home()
+vector<GCodePath> ofxGCodePlotter::home()
 {
     vector<GCodePath> gps;
     
@@ -90,12 +90,12 @@ vector<GCodePath> GCode::home()
     return gps;
 }
 
-void GCode::updateCurrentPos(ofPoint to, ofPoint** currentPos)
+void ofxGCodePlotter::updateCurrentPos(ofPoint to, ofPoint** currentPos)
 {
     *currentPos = new ofPoint(to.x, to.y);
 }
 
-GCodePath GCode::makeMovePath(ofPoint to, ofPoint** startPos, ofPoint** currentPos)
+GCodePath ofxGCodePlotter::makeMovePath(ofPoint to, ofPoint** startPos, ofPoint** currentPos)
 {
     GCodePath gp;
     gp.setEnd(to);
@@ -107,7 +107,7 @@ GCodePath GCode::makeMovePath(ofPoint to, ofPoint** startPos, ofPoint** currentP
     return gp;
 }
 
-GCodePath GCode::makeLinePath(ofPoint to, ofPoint** currentPos)
+GCodePath ofxGCodePlotter::makeLinePath(ofPoint to, ofPoint** currentPos)
 {
     GCodePath gp;
     gp.setStart(ofPoint((**currentPos).x, (**currentPos).y));
@@ -117,7 +117,7 @@ GCodePath GCode::makeLinePath(ofPoint to, ofPoint** currentPos)
     return gp;
 }
 
-vector<GCodePath> GCode::makeBezierPaths(ofPath::Command cmd, ofPoint** startPos, ofPoint** currentPos)
+vector<GCodePath> ofxGCodePlotter::makeBezierPaths(ofPath::Command cmd, ofPoint** startPos, ofPoint** currentPos)
 {
     vector<GCodePath> gps;
     
@@ -140,7 +140,7 @@ vector<GCodePath> GCode::makeBezierPaths(ofPath::Command cmd, ofPoint** startPos
     return gps;
 }
 
-GCodePath GCode::makeArcPath(ofPath::Command cmd, ofPoint** currentPos)
+GCodePath ofxGCodePlotter::makeArcPath(ofPath::Command cmd, ofPoint** currentPos)
 {    
     GCodePath gp;
     gp.setCenter(cmd.to);
@@ -167,7 +167,7 @@ GCodePath GCode::makeArcPath(ofPath::Command cmd, ofPoint** currentPos)
 }
 
 
-GCodePath GCode::makeClosePath(ofPoint to, ofPoint** startPos, ofPoint** currentPos)
+GCodePath ofxGCodePlotter::makeClosePath(ofPoint to, ofPoint** startPos, ofPoint** currentPos)
 {
     GCodePath gp;
     gp.setStart(ofPoint((**currentPos).x, (**currentPos).y));
@@ -178,7 +178,7 @@ GCodePath GCode::makeClosePath(ofPoint to, ofPoint** startPos, ofPoint** current
     return gp;
 }
 
-vector<GCodePath> GCode::pathToCommand(ofPath path)
+vector<GCodePath> ofxGCodePlotter::pathToCommand(ofPath path)
 {
     vector<GCodePath> paths;
     auto commands = path.getCommands();
@@ -234,7 +234,7 @@ vector<GCodePath> GCode::pathToCommand(ofPath path)
     return paths;
 }
 
-void GCode::transformPaths(vector<GCodePath>& paths)
+void ofxGCodePlotter::transformPaths(vector<GCodePath>& paths)
 {
     for (auto iter = paths.begin(); iter != paths.end(); ++iter)
     {
@@ -259,7 +259,7 @@ void GCode::transformPaths(vector<GCodePath>& paths)
     }
 }
 
-void GCode::scalePaths(vector<GCodePath>& paths)
+void ofxGCodePlotter::scalePaths(vector<GCodePath>& paths)
 {
     for (auto iter = paths.begin(); iter != paths.end(); ++iter)
     {
@@ -281,7 +281,7 @@ void GCode::scalePaths(vector<GCodePath>& paths)
     }
 }
 
-void GCode::flipPaths(vector<GCodePath>& paths)
+void ofxGCodePlotter::flipPaths(vector<GCodePath>& paths)
 {
     for (auto iter = paths.begin(); iter != paths.end(); ++iter)
     {
@@ -343,12 +343,12 @@ void GCode::flipPaths(vector<GCodePath>& paths)
     }
 }
 
-ofPoint GCode::pointOnCircle(ofPath::Command cmd)
+ofPoint ofxGCodePlotter::pointOnCircle(ofPath::Command cmd)
 {
     return pointOnCircle(cmd.to, cmd.angleBegin, cmd.radiusX, cmd.radiusY);
 }
 
-ofPoint GCode::pointOnCircle(ofPoint center, float angle, float radiusX, float radiusY)
+ofPoint ofxGCodePlotter::pointOnCircle(ofPoint center, float angle, float radiusX, float radiusY)
 {
     ofPoint point;
     M_PI;
@@ -357,13 +357,13 @@ ofPoint GCode::pointOnCircle(ofPoint center, float angle, float radiusX, float r
     return point;
 }
 
-bool GCode::positionIsOutOfSync(ofPath::Command cmd, ofPoint startPos)
+bool ofxGCodePlotter::positionIsOutOfSync(ofPath::Command cmd, ofPoint startPos)
 {
     ofPoint pathStart = pointOnCircle(cmd.to, cmd.angleBegin, cmd.radiusX, cmd.radiusY);
     return (startPos.x != pathStart.x || startPos.y != pathStart.y);
 }
 
-void GCode::print(vector<GCodePath> paths)
+void ofxGCodePlotter::print(vector<GCodePath> paths)
 {
     for (auto iter = paths.begin(); iter != paths.end(); ++iter)
     {
