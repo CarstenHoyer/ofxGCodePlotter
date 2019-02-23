@@ -11,6 +11,7 @@
 #include "Config.h"
 #include "GCodePath.h"
 #include "ofxCubicBezierToBiarc.h"
+#include "PathFinder.h"
 
 class ofxGCodePlotter {
 public:
@@ -40,12 +41,14 @@ public:
     void moveTo(ofPoint point);
     void lineTo(ofPoint point);
     void arcTo(ofPoint start, ofPoint end, ofPoint center, bool clockwise);
-    void down();
-    void up();
+    GCodePath down();
+    GCodePath up();
     
     
 private:
     ofxCubicBezierToBiarc bezierToBiarc;
+    PathFinder pathFinder;
+    vector<GCodePath> addMovePaths(vector<GCodePath> route);
     GCodePath makeArcPath(ofPath::Command arc, ofPoint** currentPos);
     GCodePath makeMovePath(ofPoint to, ofPoint** startPos, ofPoint** currentPos);
     GCodePath makeLinePath(ofPoint to, ofPoint** currentPos);

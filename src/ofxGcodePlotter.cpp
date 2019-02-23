@@ -41,6 +41,7 @@ vector<GCodePath> ofxGCodePlotter::generate(vector<ofPath> paths) {
         vector<GCodePath> cmdPaths = pathToCommand((*iter));
         gps.insert(gps.end(), cmdPaths.begin(), cmdPaths.end());
     }
+    //ofPoint currentPos = (*(gps[gps.size() - 1].end));
     vector<GCodePath> endCommands = addEnd();
     gps.insert(gps.end(), endCommands.begin(), endCommands.end());
     return gps;
@@ -77,15 +78,16 @@ vector<GCodePath> ofxGCodePlotter::home()
 {
     vector<GCodePath> gps;
     
-    GCodePath homeZ;
-    homeZ.type = GCodePath::Type::MoveZ;
-    homeZ.z = 0;
-    gps.push_back(homeZ);
-    
-    GCodePath homeXY;
-    homeXY.type = GCodePath::Type::Move;
-    homeXY.setEnd(ofPoint(0, 0));
-    gps.push_back(homeXY);
+    GCodePath gp;
+    gp.type = GCodePath::Type::Move;
+    /*if (currentPos != nullptr) {
+        gp.setStart(ofPoint((*currentPos).x, (*currentPos).y));
+    }
+    else {
+        gp.setStart(ofPoint(0, 0));
+    }*/
+    gp.setEnd(ofPoint(0, 0));
+    gps.push_back(gp);
     
     return gps;
 }
@@ -178,6 +180,23 @@ GCodePath ofxGCodePlotter::makeClosePath(ofPoint to, ofPoint** startPos, ofPoint
     return gp;
 }
 
+GCodePath ofxGCodePlotter::down()
+{
+    GCodePath path;
+    path.type = GCodePath::Type::MoveZ;
+    path.z = config.toolZMaximum;
+    return path;
+}
+
+GCodePath ofxGCodePlotter::up()
+{
+    GCodePath path;
+    path.type = GCodePath::Type::MoveZ;
+    path.z = config.toolZMinimum;
+    return path;
+}
+
+
 vector<GCodePath> ofxGCodePlotter::pathToCommand(ofPath path)
 {
     vector<GCodePath> paths;
@@ -186,26 +205,35 @@ vector<GCodePath> ofxGCodePlotter::pathToCommand(ofPath path)
     ofPoint* currentPos = nullptr;
     for (auto command = commands.begin(); command != commands.end(); ++command) {
         if ((*command).type == ofPath::Command::moveTo) {
+            paths.push_back(up());
             GCodePath gp = makeMovePath((*command).to, &startPos, &currentPos);
             paths.push_back(gp);
+            if (startPos == nullptr) {
+                startPos = new ofPoint((*command).to.x, (*command).to.y);
+            }
+            updateCurrentPos((*command).to, &currentPos);
         }
         
-        else if ((*command).type == ofPath::Command::lineTo)
+        if ((*command).type == ofPath::Command::lineTo)
         {
-            if (!startPos)
+            paths.push_back(down());
+            if (startPos == nullptr)
             {
-                GCodePath gp = makeMovePath((*command).to, &startPos, &currentPos);
-                paths.push_back(gp);
+                startPos = new ofPoint((*command).to.x, (*command).to.y);
+                updateCurrentPos((*command).to, &currentPos);
+                //GCodePath gp = makeMovePath((*command).to, &startPos, &currentPos);
+                //paths.push_back(gp);
             }
             else
             {
                 GCodePath gp = makeLinePath((*command).to, &currentPos);
                 paths.push_back(gp);
             }
+            paths.push_back(up());
         }
         else if ((*command).type == ofPath::Command::arc || (*command).type == ofPath::Command::arcNegative)
         {
-            
+            paths.push_back(down());
             if (!startPos || positionIsOutOfSync(*command, *startPos)) {
                 ofPoint pathStart = pointOnCircle(*command);
                 GCodePath mt = makeLinePath(pathStart, &currentPos);
@@ -213,12 +241,15 @@ vector<GCodePath> ofxGCodePlotter::pathToCommand(ofPath path)
             }
             GCodePath gp = makeArcPath(*command, &currentPos);
             paths.push_back(gp);
+            paths.push_back(up());
         }
         
         else if ((*command).type == ofPath::Command::bezierTo)
         {
+            paths.push_back(down());
             vector<GCodePath> gps = makeBezierPaths(*command, &startPos, &currentPos);
             paths.insert(paths.end(), gps.begin(), gps.end());
+            paths.push_back(up());
         }
         
         else if ((*command).type == ofPath::Command::close && startPos)
@@ -363,8 +394,16 @@ bool ofxGCodePlotter::positionIsOutOfSync(ofPath::Command cmd, ofPoint startPos)
     return (startPos.x != pathStart.x || startPos.y != pathStart.y);
 }
 
+vector<GCodePath> ofxGCodePlotter::addMovePaths(vector<GCodePath> paths)
+{
+    return paths;
+}
+
 void ofxGCodePlotter::print(vector<GCodePath> paths)
 {
+    //pathFinder = PathFinder();
+    //vector<GCodePath> route = pathFinder.findPath(paths);
+    //vector<GCodePath> result = addMovePaths(route);
     for (auto iter = paths.begin(); iter != paths.end(); ++iter)
     {
         cout << (*iter).print() << "\n";
